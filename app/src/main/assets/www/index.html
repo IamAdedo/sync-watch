@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Next.js Capacitor App</title>
+  <style>
+    :root {
+      --background: #1C1B1F;
+      --surface: #211F26;
+      --surface-card: #2B2930;
+      --surface-border: #49454F;
+      --surface-border-subtle: #36343B;
+      --text-primary: #E6E1E5;
+      --text-secondary: #CAC4D0;
+      --text-muted: #938F99;
+      --accent: #D0BCFF;
+      --accent-on-container: #EADDFF;
+      --accent-container: #381E72;
+      --accent-hover: #bfa5fa;
+      --accent-glow: rgba(208, 188, 255, 0.22);
+      --tag-pink: #EFB8C8;
+      --tag-blue: #BAC3FF;
+      --success: #4ADE80;
+      --warning: #F59E0B;
+      --danger: #F2B8B5;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--background);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(33, 31, 38, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border-subtle);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--accent-container);
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: var(--text-primary);
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.28);
+      color: #4ade80;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 20px 80px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Hero Card */
+    .hero {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 130px;
+      height: 130px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .hero h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .hero p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--surface-border-subtle);
+      border-radius: 16px;
+      padding: 4px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 70px;
+      padding: 9px 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-container);
+      color: var(--accent);
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    /* Tab Content Panels */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: var(--background);
+      border: 1px solid var(--surface-border-subtle);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    /* Action Buttons */
+    .btn {
+      width: 100%;
+      background: var(--accent);
+      color: var(--accent-container);
+      border: none;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+      box-shadow: none;
+    }
+
+    .btn-secondary:active {
+      background: var(--surface-border-subtle);
+      color: var(--text-primary);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #052e16;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* Input Fields */
+    .input-field {
+      width: 100%;
+      background: var(--background);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-size: 13px;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* Image Preview */
+    .preview-container {
+      width: 100%;
+      min-height: 140px;
+      background: var(--background);
+      border: 1px dashed var(--surface-border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+      display: none;
+      border-radius: 10px;
+    }
+
+    /* Console Log Box & Color-Coded Log Stream */
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .log-filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .log-filter-pill {
+      background: var(--surface);
+      border: 1px solid var(--surface-border-subtle);
+      color: var(--text-secondary);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .log-filter-pill.active {
+      background: var(--accent-container);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .log-filter-pill.filter-info.active {
+      background: rgba(186, 195, 255, 0.2);
+      border-color: var(--tag-blue);
+      color: var(--tag-blue);
+    }
+
+    .log-filter-pill.filter-success.active {
+      background: rgba(74, 222, 128, 0.2);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .log-filter-pill.filter-error.active {
+      background: rgba(242, 184, 181, 0.2);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .console-box {
+      background: #141316;
+      border: 1px solid var(--surface-border-subtle);
+      border-radius: 14px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11.5px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border-left: 3px solid var(--text-muted);
+      background: rgba(255, 255, 255, 0.02);
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .log-item.level-info {
+      border-left-color: var(--tag-blue);
+      background: rgba(186, 195, 255, 0.04);
+      color: #E2E8F0;
+    }
+
+    .log-item.level-success {
+      border-left-color: var(--success);
+      background: rgba(74, 222, 128, 0.05);
+      color: #DCFCE7;
+    }
+
+    .log-item.level-error {
+      border-left-color: var(--danger);
+      background: rgba(242, 184, 181, 0.08);
+      color: #FFE4E6;
+    }
+
+    .log-item.level-warn {
+      border-left-color: var(--warning);
+      background: rgba(245, 158, 11, 0.06);
+      color: #FEF3C7;
+    }
+
+    .log-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .log-badge.badge-info {
+      background: rgba(186, 195, 255, 0.2);
+      color: var(--tag-blue);
+    }
+
+    .log-badge.badge-success {
+      background: rgba(74, 222, 128, 0.2);
+      color: var(--success);
+    }
+
+    .log-badge.badge-error {
+      background: rgba(242, 184, 181, 0.25);
+      color: var(--danger);
+    }
+
+    .log-badge.badge-warn {
+      background: rgba(245, 158, 11, 0.22);
+      color: var(--warning);
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .log-content {
+      flex: 1;
+    }
+
+    /* CI/CD Pipeline Steps */
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      border-left: 3px solid var(--accent);
+      background: var(--background);
+      border-radius: 0 12px 12px 0;
+      margin-bottom: 8px;
+    }
+
+    .pipeline-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-container);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pipeline-info h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: var(--text-primary);
+    }
+
+    .pipeline-info p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .code-block {
+      background: #141316;
+      border: 1px solid var(--surface-border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--tag-blue);
+      overflow-x: auto;
+      margin: 8px 0;
+      user-select: text;
+    }
+
+    /* Biometric Switch & Security Card */
+    .security-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: var(--background);
+      border-radius: 12px;
+      border: 1px solid var(--surface-border-subtle);
+      margin-top: 10px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #3f3d45;
+      transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 34px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .toggle-slider:active {
+      transform: scale(0.93);
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--success);
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.35);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    input:checked + .toggle-slider:active:before {
+      transform: translateX(20px) scale(0.94);
+    }
+
+    .bio-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">C</div>
+      <div>
+        <div class="brand-title">Capacitor Sync</div>
+        <div class="brand-subtitle">Next.js Android Wrapper</div>
+      </div>
+    </div>
+    <div class="badge-status">
+      <span class="badge-dot"></span>
+      <span id="bridgeStatusText">GitHub Connected</span>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <main class="container">
+
+    <!-- Hero Card -->
+    <div class="hero">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+        <div>
+          <span class="hero-tag">Current Project</span>
+          <h1>nextjs-android-app</h1>
+          <p style="font-size: 12px; color: var(--text-secondary);">main branch • capacitor hybrid wrapper</p>
+        </div>
+        <div style="padding: 4px 8px; border-radius: 8px; background: var(--accent-container); color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: 0.5px;">ACTIVE</div>
+      </div>
+      <div class="grid-2" style="margin-top: 12px; margin-bottom: 0;">
+        <div class="stat-box">
+          <div class="stat-label">Build Engine</div>
+          <div class="stat-value" style="font-size: 12px; color: var(--accent);">Next.js 14 + Capacitor</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">CI/CD Pipeline</div>
+          <div class="stat-value" style="font-size: 12px; color: var(--success);">Automated Deploy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('device')">📱 System</button>
+      <button class="tab-btn" onclick="switchTab('camera')">📷 Camera</button>
+      <button class="tab-btn" onclick="switchTab('location')">📍 Location</button>
+      <button class="tab-btn" onclick="switchTab('storage')">💾 Storage</button>
+      <button class="tab-btn" onclick="switchTab('cicd')">🚀 CI/CD</button>
+    </div>
+
+    <!-- TAB 1: System & Device Info -->
+    <section id="tab-device" class="tab-panel active">
+      <div class="card">
+        <div class="card-title">📱 Device & Network Telemetry</div>
+        <div class="grid-2">
+          <div class="stat-box">
+            <div class="stat-label">Platform</div>
+            <div class="stat-value" id="devPlatform">Android (Native)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Connection (Real-Time)</div>
+            <div class="stat-value" id="devNetwork"><span style="color: var(--success);">📶 Connected (WiFi)</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Model</div>
+            <div class="stat-value" id="devModel">Detecting...</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Android OS</div>
+            <div class="stat-value" id="devOs">Detecting...</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px; width: auto;" onclick="checkNetworkStatus()">🔄 Check Network Status</button>
+        </div>
+
+        <div class="card-title" style="margin-top: 14px;">📳 Haptics & Feedback</div>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="triggerHaptic('light')">Light Impact</button>
+          <button class="btn btn-secondary" onclick="triggerHaptic('heavy')">Heavy Impact</button>
+          <button class="btn btn-secondary" onclick="showToastMessage('Hello from Next.js Capacitor!')">Native Toast</button>
+        </div>
+      </div>
+
+      <!-- Biometric Security & App Access Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-title" style="margin-bottom: 0;">🔐 Biometric Authentication</div>
+          <span id="bioHardwareBadge" class="bio-badge" style="background: rgba(74, 222, 128, 0.15); color: var(--success);">
+            Fingerprint / Face Ready
+          </span>
+        </div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; margin-bottom: 10px;">
+          Gate application access and sensitive actions using native Android BiometricPrompt (Fingerprint / Face Unlock).
+        </p>
+
+        <!-- Secure App Access Toggle Row -->
+        <div class="security-toggle-row">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 22px;" id="lockIconEmoji">🔓</div>
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Secure App Access</div>
+              <div style="font-size: 11px; color: var(--text-secondary);" id="secureLockDesc">Require fingerprint or face scan on sensitive operations</div>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="secureAccessToggle" onchange="onSecureAccessToggleChanged(this.checked)" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-primary" style="flex: 1; min-width: 160px;" onclick="triggerBiometricScanPrompt()">
+            👆 Verify Identity (Scan Prompt)
+          </button>
+          <button class="btn btn-secondary" style="flex: 1; min-width: 140px;" onclick="checkBiometryHardware()">
+            🔍 Check Hardware
+          </button>
+        </div>
+
+        <div id="bioStatusBanner" style="margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 11px; background: rgba(255,255,255,0.03); color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+          <span>Status:</span> <span id="bioStatusDetail" style="color: var(--tag-blue); font-weight: 600;">BiometricPrompt Bridge initialized</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Camera & Media -->
+    <section id="tab-camera" class="tab-panel">
+      <div class="card">
+        <div class="card-title">📷 Native Camera & Gallery</div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+          Access the device camera or photo library seamlessly using the Capacitor Bridge API.
+        </p>
+
+        <div class="preview-container" id="photoPreviewContainer">
+          <img id="photoPreview" class="preview-img" alt="Captured Photo" />
+          <div id="photoPlaceholder" style="text-align: center; color: var(--text-secondary); font-size: 12px;">
+            <div style="font-size: 28px; margin-bottom: 6px;">📷</div>
+            No photo captured yet
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn" onclick="capturePhoto('camera')">Take Picture</button>
+          <button class="btn btn-secondary" onclick="capturePhoto('gallery')">Select from Gallery</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Geolocation -->
+    <section id="tab-location" class="tab-panel">
+      <div class="card">
+        <div class="card-title">📍 GPS & Location Services</div>
+        <div class="grid-2">
+          <div class="stat-box">
+            <div class="stat-label">Latitude</div>
+            <div class="stat-value" id="locLat">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Longitude</div>
+            <div class="stat-value" id="locLng">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Accuracy</div>
+            <div class="stat-value" id="locAccuracy">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Timestamp</div>
+            <div class="stat-value" id="locTime">--</div>
+          </div>
+        </div>
+
+        <button class="btn" onclick="fetchLocation()">Get Current GPS Location</button>
+      </div>
+    </section>
+
+    <!-- TAB 4: Storage & Preferences -->
+    <section id="tab-storage" class="tab-panel">
+      <div class="card">
+        <div class="card-title">💾 Persistent Key-Value Store</div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+          Data is persisted across app launches using Android SharedPreferences via Capacitor Preferences.
+        </p>
+
+        <input type="text" id="storageKey" class="input-field" placeholder="Key (e.g. user_session)" value="app_theme_mode">
+        <input type="text" id="storageValue" class="input-field" placeholder="Value (e.g. dark)" value="dark_amoled">
+
+        <div class="btn-group">
+          <button class="btn" onclick="saveStorageItem()">Save Value</button>
+          <button class="btn btn-secondary" onclick="getStorageItem()">Read Value</button>
+          <button class="btn btn-secondary" onclick="clearStorageItems()">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: CI/CD & Deployment Workflows -->
+    <section id="tab-cicd" class="tab-panel">
+      <div class="card">
+        <div class="card-title">🚀 Automated GitHub CI/CD Workflows</div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
+          Every push to your connected GitHub repository triggers automated builds and APK releases.
+        </p>
+
+        <div class="pipeline-step">
+          <div class="pipeline-num">1</div>
+          <div class="pipeline-info">
+            <h4>Push to GitHub</h4>
+            <p>Code changes synced from AI Studio or local git push trigger the pipeline.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-num">2</div>
+          <div class="pipeline-info">
+            <h4>Next.js Static Export</h4>
+            <p>Runs <code>npm run build && npx next export</code> to update web assets.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-num">3</div>
+          <div class="pipeline-info">
+            <h4>Android Gradle Build & Sign</h4>
+            <p>Compiles Release APK and AAB with automated signing keys.</p>
+          </div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-num">4</div>
+          <div class="pipeline-info">
+            <h4>GitHub Releases & App Distribution</h4>
+            <p>Publishes signed APK assets ready for download and testing.</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+# Trigger pipeline manually or on push:
+git add .
+git commit -m "feat: updated Next.js app functionality"
+git push origin main
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Bridge Event Console with Color-Coded Log Levels -->
+    <div class="card">
+      <div class="console-header">
+        <div class="card-title" style="margin-bottom: 0;">📡 Bridge Event Stream</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span onclick="copyAllLogs()" style="font-size: 11px; color: var(--tag-blue); cursor: pointer; font-weight: 600;">Copy</span>
+          <span style="color: var(--surface-border);">•</span>
+          <span onclick="clearLogs()" style="font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600;">Clear</span>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="log-filter-bar" id="logFilterBar">
+        <button class="log-filter-pill active" onclick="setLogFilter('ALL')">ALL <span id="countAll" style="opacity: 0.7;">(1)</span></button>
+        <button class="log-filter-pill filter-info" onclick="setLogFilter('INFO')">INFO <span id="countInfo" style="opacity: 0.7;">(0)</span></button>
+        <button class="log-filter-pill filter-success" onclick="setLogFilter('SUCCESS')">SUCCESS <span id="countSuccess" style="opacity: 0.7;">(1)</span></button>
+        <button class="log-filter-pill filter-error" onclick="setLogFilter('ERROR')">ERROR <span id="countError" style="opacity: 0.7;">(0)</span></button>
+      </div>
+
+      <div class="console-box" id="consoleLogs">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Capacitor JavaScript Bridge Client SDK -->
+  <script>
+    // In-memory structured logs
+    const bridgeLogsData = [];
+    let currentFilter = 'ALL';
+    const networkListeners = [];
+
+    // Initialize Mock / Native Capacitor Bridge
+    window.Capacitor = window.Capacitor || {
+      isNative: true,
+      platform: 'android',
+      Plugins: {},
+      toNative: function(plugin, method, options, callbackId) {
+        if (window.AndroidBridge && window.AndroidBridge.postMessage) {
+          window.AndroidBridge.postMessage(JSON.stringify({
+            plugin: plugin,
+            method: method,
+            options: options || {},
+            callbackId: callbackId
+          }));
+        } else {
+          console.log('[Capacitor Bridge]', plugin, method, options);
+        }
+      },
+      addListener: function(plugin, eventName, listener) {
+        if (plugin === 'Network' && eventName === 'networkStatusChange') {
+          networkListeners.push(listener);
+        }
+        return {
+          remove: function() {
+            const idx = networkListeners.indexOf(listener);
+            if (idx > -1) networkListeners.splice(idx, 1);
+          }
+        };
+      },
+      triggerEvent: function(plugin, eventName, data) {
+        if (plugin === 'Network' && eventName === 'networkStatusChange') {
+          updateNetworkUI(data);
+          networkListeners.forEach(fn => {
+            try { fn(data); } catch(e) { console.error(e); }
+          });
+        }
+      }
+    };
+
+    // Capacitor Network Plugin object definition
+    window.Capacitor.Plugins.Network = {
+      getStatus: async function() {
+        return await callCapacitorPlugin('Network', 'getStatus');
+      },
+      addListener: function(eventName, listener) {
+        if (eventName === 'networkStatusChange') {
+          networkListeners.push(listener);
+          // Query current status immediately
+          callCapacitorPlugin('Network', 'getStatus').then(status => {
+            if (status) listener(status);
+          });
+        }
+        return {
+          remove: function() {
+            const idx = networkListeners.indexOf(listener);
+            if (idx > -1) networkListeners.splice(idx, 1);
+          }
+        };
+      }
+    };
+
+    // Capacitor Biometric Auth Plugin object definition
+    window.Capacitor.Plugins.BiometricAuth = {
+      checkBiometry: async function() {
+        return await callCapacitorPlugin('BiometricAuth', 'checkBiometry');
+      },
+      authenticate: async function(options) {
+        return await callCapacitorPlugin('BiometricAuth', 'authenticate', options || {
+          title: 'Biometric Verification',
+          subtitle: 'Scan fingerprint or face',
+          reason: 'Confirm your identity'
+        });
+      },
+      setSecureAppAccess: async function(options) {
+        return await callCapacitorPlugin('BiometricAuth', 'setSecureAppAccess', options);
+      },
+      getSecureAppAccess: async function() {
+        return await callCapacitorPlugin('BiometricAuth', 'getSecureAppAccess');
+      }
+    };
+    window.Capacitor.Plugins.NativeBiometric = window.Capacitor.Plugins.BiometricAuth;
+
+    // Real-Time Network UI updater
+    function updateNetworkUI(status) {
+      if (!status) return;
+      const el = document.getElementById('devNetwork');
+      if (!el) return;
+
+      const isConnected = !!status.connected;
+      const connType = (status.connectionType || 'unknown').toLowerCase();
+
+      let displayText = 'Disconnected (Offline)';
+      let statusColor = 'var(--danger)';
+      let badgeIcon = '🔴';
+
+      if (isConnected) {
+        statusColor = 'var(--success)';
+        if (connType === 'wifi') {
+          displayText = 'Connected (WiFi)';
+          badgeIcon = '📶';
+        } else if (connType === 'cellular') {
+          displayText = 'Connected (Cellular)';
+          badgeIcon = '📡';
+        } else if (connType === 'ethernet') {
+          displayText = 'Connected (Ethernet)';
+          badgeIcon = '🔌';
+        } else {
+          displayText = `Connected (${connType.toUpperCase()})`;
+          badgeIcon = '🟢';
+        }
+      }
+
+      el.innerHTML = `<span style="margin-right: 4px;">${badgeIcon}</span><span style="color: ${statusColor}; font-weight: 600;">${displayText}</span>`;
+
+      // Update header badge dot
+      const badgeDot = document.querySelector('.badge-dot');
+      if (badgeDot) {
+        badgeDot.style.background = isConnected ? 'var(--success)' : 'var(--danger)';
+      }
+    }
+
+    // Called from Native Android on network changes
+    window.onNetworkStatusChange = function(status) {
+      updateNetworkUI(status);
+      const isConnected = !!status.connected;
+      const type = (status.connectionType || 'unknown').toUpperCase();
+      log(`Network status changed: ${isConnected ? 'Connected (' + type + ')' : 'Disconnected (Offline)'}`, isConnected ? 'SUCCESS' : 'WARN');
+      
+      networkListeners.forEach(fn => {
+        try { fn(status); } catch(e) {}
+      });
+    };
+
+    // Color-Coded Logger with Levels
+    function log(message, explicitLevel = null) {
+      let level = explicitLevel;
+      if (!level) {
+        const lower = String(message).toLowerCase();
+        if (lower.includes('error') || lower.includes('failed') || lower.includes('exception') || lower.includes('cancelled')) {
+          level = 'ERROR';
+        } else if (lower.includes('success') || lower.includes('connected') || lower.includes('ready') || lower.includes('saved') || lower.includes('retrieved')) {
+          level = 'SUCCESS';
+        } else if (lower.includes('warn') || lower.includes('caution')) {
+          level = 'WARN';
+        } else {
+          level = 'INFO';
+        }
+      }
+
+      const logEntry = {
+        id: Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        time: new Date().toLocaleTimeString(),
+        message: message,
+        level: level.toUpperCase()
+      };
+
+      bridgeLogsData.unshift(logEntry);
+      if (bridgeLogsData.length > 150) bridgeLogsData.pop();
+
+      updateLogCounts();
+      renderLogs();
+    }
+
+    function updateLogCounts() {
+      const all = bridgeLogsData.length;
+      const info = bridgeLogsData.filter(l => l.level === 'INFO' || l.level === 'WARN').length;
+      const success = bridgeLogsData.filter(l => l.level === 'SUCCESS').length;
+      const error = bridgeLogsData.filter(l => l.level === 'ERROR').length;
+
+      document.getElementById('countAll').innerText = `(${all})`;
+      document.getElementById('countInfo').innerText = `(${info})`;
+      document.getElementById('countSuccess').innerText = `(${success})`;
+      document.getElementById('countError').innerText = `(${error})`;
+    }
+
+    function setLogFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.log-filter-pill').forEach(pill => {
+        pill.classList.remove('active');
+        if (pill.innerText.startsWith(filter)) {
+          pill.classList.add('active');
+        }
+      });
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const consoleBox = document.getElementById('consoleLogs');
+      const filtered = bridgeLogsData.filter(item => {
+        if (currentFilter === 'ALL') return true;
+        if (currentFilter === 'INFO') return item.level === 'INFO' || item.level === 'WARN';
+        return item.level === currentFilter;
+      });
+
+      if (filtered.length === 0) {
+        consoleBox.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 12px; font-size: 11px;">No events matching current filter.</div>';
+        return;
+      }
+
+      consoleBox.innerHTML = filtered.map(item => {
+        const levelClass = item.level.toLowerCase();
+        let badgeIcon = 'ℹ';
+        if (item.level === 'SUCCESS') badgeIcon = '✓';
+        if (item.level === 'ERROR') badgeIcon = '✕';
+        if (item.level === 'WARN') badgeIcon = '⚠';
+
+        return `
+          <div class="log-item level-${levelClass}">
+            <span class="log-badge badge-${levelClass}">${badgeIcon} ${item.level}</span>
+            <span class="log-time">${item.time}</span>
+            <span class="log-content">${escapeHtml(item.message)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function clearLogs() {
+      bridgeLogsData.length = 0;
+      log('Bridge logs cleared.', 'INFO');
+    }
+
+    function copyAllLogs() {
+      const text = bridgeLogsData.map(l => `[${l.level}] ${l.time} - ${l.message}`).join('\n');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      }
+      showToastMessage('Copied logs to clipboard');
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetPanel = document.getElementById('tab-' + tabId);
+      if (targetPanel) targetPanel.classList.add('active');
+      
+      triggerHaptic('light');
+    }
+
+    // Capacitor Native Bridge Call Helper
+    let callbackCounter = 0;
+    const pendingCallbacks = {};
+
+    function callCapacitorPlugin(plugin, method, data = {}) {
+      return new Promise((resolve, reject) => {
+        const callbackId = 'cb_' + (++callbackCounter);
+        pendingCallbacks[callbackId] = { resolve, reject };
+
+        if (window.AndroidBridge && window.AndroidBridge.handleAction) {
+          const resultJson = window.AndroidBridge.handleAction(plugin, method, JSON.stringify(data), callbackId);
+          if (resultJson) {
+            try {
+              const res = JSON.parse(resultJson);
+              resolve(res);
+            } catch (e) {
+              resolve(resultJson);
+            }
+          }
+        } else {
+          // Web fallback simulation
+          setTimeout(() => {
+            resolve({ simulated: true, status: 'ok' });
+          }, 100);
+        }
+      });
+    }
+
+    // Called from Native Android
+    window.onNativeCallback = function(callbackId, resultJson, error) {
+      if (error) {
+        log(`Native Callback [${callbackId}]: Error - ${error}`, 'ERROR');
+      } else {
+        log(`Native Callback [${callbackId}]: Success`, 'SUCCESS');
+      }
+
+      if (pendingCallbacks[callbackId]) {
+        if (error) {
+          pendingCallbacks[callbackId].reject(new Error(error));
+        } else {
+          try {
+            const parsed = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+            pendingCallbacks[callbackId].resolve(parsed);
+          } catch(e) {
+            pendingCallbacks[callbackId].resolve(resultJson);
+          }
+        }
+        delete pendingCallbacks[callbackId];
+      }
+    };
+
+    // System / Device Info
+    async function loadDeviceInfo() {
+      try {
+        const info = await callCapacitorPlugin('Device', 'getInfo');
+        if (info) {
+          document.getElementById('devModel').innerText = info.model || 'Android Device';
+          document.getElementById('devOs').innerText = 'API ' + (info.osVersion || '34+');
+          document.getElementById('devPlatform').innerText = (info.platform || 'android').toUpperCase();
+          log(`Device info loaded: ${info.model} (API ${info.osVersion})`, 'SUCCESS');
+        }
+      } catch (err) {
+        log('Device info error: ' + err.message, 'ERROR');
+      }
+    }
+
+    // Network Status Checker
+    async function checkNetworkStatus() {
+      log('Querying network status from Capacitor Network plugin...', 'INFO');
+      try {
+        const status = await window.Capacitor.Plugins.Network.getStatus();
+        if (status) {
+          updateNetworkUI(status);
+          const isConnected = !!status.connected;
+          const type = (status.connectionType || 'unknown').toUpperCase();
+          log(`Network status query: ${isConnected ? 'Connected (' + type + ')' : 'Disconnected (Offline)'}`, isConnected ? 'SUCCESS' : 'WARN');
+          showToastMessage(`Network: ${isConnected ? type : 'Offline'}`);
+        }
+      } catch (err) {
+        log('Network status query failed: ' + err.message, 'ERROR');
+      }
+    }
+
+    // Haptics & Feedback
+    function triggerHaptic(type) {
+      callCapacitorPlugin('Haptics', 'impact', { style: type });
+      log(`Haptics triggered: ${type} impact`, 'INFO');
+    }
+
+    function showToastMessage(msg) {
+      callCapacitorPlugin('Toast', 'show', { text: msg });
+      log(`Toast triggered: "${msg}"`, 'INFO');
+    }
+
+    // Camera
+    async function capturePhoto(source) {
+      log(`Requesting camera/gallery photo (${source})...`, 'INFO');
+      try {
+        const result = await callCapacitorPlugin('Camera', 'getPhoto', { source: source });
+        if (result && result.dataUrl) {
+          const img = document.getElementById('photoPreview');
+          img.src = result.dataUrl;
+          img.style.display = 'block';
+          document.getElementById('photoPlaceholder').style.display = 'none';
+          log('Photo captured and loaded into preview successfully!', 'SUCCESS');
+          showToastMessage('Photo captured!');
+        } else {
+          log('Photo capture cancelled or empty.', 'WARN');
+        }
+      } catch (err) {
+        log('Camera capture failed: ' + err.message, 'ERROR');
+      }
+    }
+
+    // Location
+    async function fetchLocation() {
+      log('Requesting GPS Geolocation coordinates...', 'INFO');
+      try {
+        const pos = await callCapacitorPlugin('Geolocation', 'getCurrentPosition');
+        if (pos && pos.coords) {
+          document.getElementById('locLat').innerText = pos.coords.latitude.toFixed(6);
+          document.getElementById('locLng').innerText = pos.coords.longitude.toFixed(6);
+          document.getElementById('locAccuracy').innerText = (pos.coords.accuracy || 10).toFixed(1) + ' m';
+          document.getElementById('locTime').innerText = new Date(pos.timestamp || Date.now()).toLocaleTimeString();
+          log(`GPS Location retrieved: Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)} (±${(pos.coords.accuracy || 10).toFixed(1)}m)`, 'SUCCESS');
+          showToastMessage('GPS Location Updated');
+        }
+      } catch (err) {
+        log('Geolocation error: ' + err.message, 'ERROR');
+      }
+    }
+
+    // Biometric Authentication & Secure App Access
+    let isBiometricScanning = false;
+
+    async function checkBiometryHardware() {
+      log('Checking biometric hardware availability...', 'INFO');
+      try {
+        const bio = await window.Capacitor.Plugins.BiometricAuth.checkBiometry();
+        const badge = document.getElementById('bioHardwareBadge');
+        const detail = document.getElementById('bioStatusDetail');
+        
+        if (bio) {
+          const isAvail = !!bio.isAvailable;
+          const statusText = bio.status || (isAvail ? 'Biometric Hardware Ready' : 'Biometrics Unavailable');
+          
+          if (badge) {
+            badge.style.background = isAvail ? 'rgba(74, 222, 128, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+            badge.style.color = isAvail ? 'var(--success)' : 'var(--warning)';
+            badge.innerText = isAvail ? 'Fingerprint / Face Ready' : 'Hardware Limited';
+          }
+          if (detail) {
+            detail.innerText = `${statusText} (${isAvail ? 'Strong/Weak Auth' : 'Passcode Fallback'})`;
+          }
+          log(`Biometric status: ${statusText} (Available: ${isAvail})`, isAvail ? 'SUCCESS' : 'WARN');
+          showToastMessage(`Biometrics: ${isAvail ? 'Ready' : 'Not Enrolled'}`);
+        }
+      } catch (err) {
+        log('Biometric hardware check failed: ' + err.message, 'ERROR');
+      }
+    }
+
+    async function loadBiometricState() {
+      try {
+        const res = await window.Capacitor.Plugins.BiometricAuth.getSecureAppAccess();
+        const toggle = document.getElementById('secureAccessToggle');
+        const lockIcon = document.getElementById('lockIconEmoji');
+        const desc = document.getElementById('secureLockDesc');
+
+        const isEnabled = !!(res && res.enabled);
+        if (toggle) toggle.checked = isEnabled;
+        if (lockIcon) lockIcon.innerText = isEnabled ? '🔒' : '🔓';
+        if (desc) desc.innerText = isEnabled ? 'Active • Protected with native Fingerprint / Face ID' : 'Disabled • Tap toggle to enable biometric protection';
+
+        // Check hardware status as well
+        await checkBiometryHardware();
+      } catch (err) {
+        console.error('Failed to load biometric state:', err);
+      }
+    }
+
+    async function onSecureAccessToggleChanged(targetState) {
+      if (isBiometricScanning) return;
+      isBiometricScanning = true;
+
+      const toggle = document.getElementById('secureAccessToggle');
+      const lockIcon = document.getElementById('lockIconEmoji');
+      const desc = document.getElementById('secureLockDesc');
+      const detail = document.getElementById('bioStatusDetail');
+
+      const actionText = targetState ? 'Enable Secure App Access' : 'Disable Secure App Access';
+      const promptReason = targetState 
+        ? 'Scan your fingerprint or face to protect sensitive app data' 
+        : 'Scan your fingerprint or face to verify identity and disable security';
+
+      log(`Initiating Biometric verification for: ${actionText}...`, 'INFO');
+      if (detail) detail.innerText = `Awaiting Biometric scan for ${actionText}...`;
+
+      try {
+        const result = await window.Capacitor.Plugins.BiometricAuth.authenticate({
+          title: actionText,
+          subtitle: 'Native Biometric Verification',
+          description: promptReason,
+          cancelTitle: 'Cancel'
+        });
+
+        if (result && result.success) {
+          // Save persistent state
+          await window.Capacitor.Plugins.BiometricAuth.setSecureAppAccess({ enabled: targetState });
+          
+          if (toggle) toggle.checked = targetState;
+          if (lockIcon) lockIcon.innerText = targetState ? '🔒' : '🔓';
+          if (desc) desc.innerText = targetState 
+            ? 'Active • Protected with native Fingerprint / Face ID' 
+            : 'Disabled • Tap toggle to enable biometric protection';
+          if (detail) detail.innerText = `Secure Access ${targetState ? 'Enabled' : 'Disabled'} via Biometric Scan`;
+
+          triggerHaptic('heavy');
+          log(`Biometric identity verified! Secure App Access is now ${targetState ? 'ENABLED' : 'DISABLED'}.`, 'SUCCESS');
+          showToastMessage(`Secure Access ${targetState ? 'Enabled' : 'Disabled'}`);
+        } else {
+          throw new Error('Biometric verification not confirmed');
+        }
+      } catch (err) {
+        // Revert toggle switch
+        if (toggle) toggle.checked = !targetState;
+        if (detail) detail.innerText = `Verification Cancelled / Failed (${err.message || 'Cancelled'})`;
+        log(`Biometric Auth cancelled or failed: ${err.message || 'Cancelled'}`, 'WARN');
+        showToastMessage('Biometric scan cancelled');
+        triggerHaptic('light');
+      } finally {
+        isBiometricScanning = false;
+      }
+    }
+
+    async function triggerBiometricScanPrompt() {
+      if (isBiometricScanning) return;
+      isBiometricScanning = true;
+
+      const detail = document.getElementById('bioStatusDetail');
+      log('Triggering manual BiometricPrompt scan test...', 'INFO');
+      if (detail) detail.innerText = 'Displaying native BiometricPrompt...';
+
+      try {
+        const result = await window.Capacitor.Plugins.BiometricAuth.authenticate({
+          title: 'Identity Verification',
+          subtitle: 'Confirm fingerprint or face',
+          description: 'Authenticate to access secured Next.js features',
+          cancelTitle: 'Cancel'
+        });
+
+        if (result && (result.success || result.verified)) {
+          log('Biometric authentication verified successfully! (Fingerprint/Face Match)', 'SUCCESS');
+          if (detail) detail.innerText = 'Identity Verified (Fingerprint/Face Match)';
+          showToastMessage('Biometric Identity Verified!');
+          triggerHaptic('heavy');
+        } else {
+          throw new Error('Biometric authentication rejected');
+        }
+      } catch (err) {
+        log(`Biometric scan error or dismiss: ${err.message || 'Cancelled'}`, 'WARN');
+        if (detail) detail.innerText = `Scan Cancelled: ${err.message || 'Dismissed'}`;
+        showToastMessage('Scan dismissed or cancelled');
+      } finally {
+        isBiometricScanning = false;
+      }
+    }
+
+    // Storage
+    async function saveStorageItem() {
+      const key = document.getElementById('storageKey').value.trim();
+      const val = document.getElementById('storageValue').value.trim();
+      if (!key) {
+        log('Storage save cancelled: Key is required', 'WARN');
+        return;
+      }
+      await callCapacitorPlugin('Preferences', 'set', { key: key, value: val });
+      log(`Storage SET [${key}] = "${val}" successfully saved`, 'SUCCESS');
+      showToastMessage(`Saved "${key}" to native storage`);
+    }
+
+    async function getStorageItem() {
+      const key = document.getElementById('storageKey').value.trim();
+      if (!key) {
+        log('Storage read cancelled: Key is required', 'WARN');
+        return;
+      }
+      const res = await callCapacitorPlugin('Preferences', 'get', { key: key });
+      if (res && res.value !== undefined && res.value !== null) {
+        document.getElementById('storageValue').value = res.value;
+        log(`Storage GET [${key}] -> "${res.value}" (Found)`, 'SUCCESS');
+        showToastMessage(`Retrieved: ${res.value}`);
+      } else {
+        log(`Storage GET [${key}] -> Key not found`, 'WARN');
+        showToastMessage(`Key "${key}" not found`);
+      }
+    }
+
+    async function clearStorageItems() {
+      await callCapacitorPlugin('Preferences', 'clear');
+      document.getElementById('storageValue').value = '';
+      log('Native SharedPreferences storage cleared', 'SUCCESS');
+      showToastMessage('Native storage cleared');
+    }
+
+    // Initial Load
+    window.addEventListener('DOMContentLoaded', () => {
+      log('Capacitor JavaScript Bridge connected & ready', 'SUCCESS');
+      loadDeviceInfo();
+
+      // Register real-time Network Status listener via Capacitor Network Plugin
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Network) {
+        window.Capacitor.Plugins.Network.addListener('networkStatusChange', (status) => {
+          updateNetworkUI(status);
+        });
+      }
+
+      // Initial network query
+      checkNetworkStatus();
+
+      // Initial Biometric state & hardware query
+      loadBiometricState();
+    });
+  </script>
+</body>
+</html>

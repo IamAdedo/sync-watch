@@ -1,0 +1,7 @@
+{
+  "name": "Next.js Capacitor App",
+  "description": "Android hybrid application wrapper for Next.js web applications with Capacitor JavaScript bridge, device hardware APIs, and automated GitHub Actions CI/CD deployment pipelines.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
