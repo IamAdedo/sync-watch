@@ -45,6 +45,24 @@
       padding-bottom: env(safe-area-inset-bottom, 20px);
       user-select: none;
       overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    body.default {
+      --background: #1C1B1F;
+      --surface: #211F26;
+      --surface-card: #2B2930;
+      --surface-border: #49454F;
+      --surface-border-subtle: #36343B;
+    }
+
+    body.dark_amoled {
+      --background: #000000;
+      --surface: #09080C;
+      --surface-card: #121116;
+      --surface-border: #2E2B36;
+      --surface-border-subtle: #1C1A22;
+      --accent-glow: rgba(208, 188, 255, 0.32);
     }
 
     /* Header */
@@ -300,6 +318,31 @@
     .btn:active {
       transform: scale(0.98);
       background: var(--accent-hover);
+    }
+
+    .btn:disabled,
+    .btn.btn-loading {
+      pointer-events: none;
+      opacity: 0.85;
+      cursor: wait;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 2.2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: btn-spin 0.65s linear infinite;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    @keyframes btn-spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .btn-secondary {
@@ -601,7 +644,7 @@
       right: 0;
       bottom: 0;
       background-color: #3f3d45;
-      transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background-color 0.24s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, box-shadow 0.24s ease 0.06s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 34px;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
     }
@@ -647,7 +690,7 @@
     }
   </style>
 </head>
-<body>
+<body class="default">
 
   <!-- App Header -->
   <header class="header">
@@ -925,6 +968,108 @@ git push origin main
     const bridgeLogsData = [];
     let currentFilter = 'ALL';
     const networkListeners = [];
+    let lastClickedBtn = null;
+    let lastClickedBtnTime = 0;
+
+    // Track button clicks in capture phase so callCapacitorPlugin knows which .btn triggered it
+    document.addEventListener('pointerdown', function(e) {
+      const btn = e.target && e.target.closest ? e.target.closest('.btn') : null;
+      if (btn) {
+        lastClickedBtn = btn;
+        lastClickedBtnTime = Date.now();
+      }
+    }, true);
+
+    document.addEventListener('click', function(e) {
+      const btn = e.target && e.target.closest ? e.target.closest('.btn') : null;
+      if (btn) {
+        if (btn.dataset.loading === 'true' || btn.classList.contains('btn-loading')) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
+        lastClickedBtn = btn;
+        lastClickedBtnTime = Date.now();
+      }
+    }, true);
+
+    // Helper to manage .loading-spinner inside .btn elements
+    function setBtnLoadingState(btn, isLoading) {
+      if (!btn || !btn.classList || !btn.classList.contains('btn')) return;
+      if (isLoading) {
+        btn._loadingCount = (btn._loadingCount || 0) + 1;
+        if (btn._loadingCount === 1) {
+          btn.dataset.originalHtml = btn.innerHTML;
+          btn.dataset.loading = 'true';
+          btn.disabled = true;
+          btn.classList.add('btn-loading');
+          btn.innerHTML = '<span class="loading-spinner" role="status" aria-label="Loading"></span>';
+        }
+      } else {
+        btn._loadingCount = Math.max(0, (btn._loadingCount || 1) - 1);
+        if (btn._loadingCount === 0) {
+          if (btn.dataset.originalHtml !== undefined) {
+            btn.innerHTML = btn.dataset.originalHtml;
+            delete btn.dataset.originalHtml;
+          }
+          delete btn.dataset.loading;
+          btn.disabled = false;
+          btn.classList.remove('btn-loading');
+        }
+      }
+    }
+
+    function resetAllBtnLoadingStates() {
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn._loadingCount = 0;
+        if (btn.dataset.originalHtml !== undefined) {
+          btn.innerHTML = btn.dataset.originalHtml;
+          delete btn.dataset.originalHtml;
+        }
+        delete btn.dataset.loading;
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+      });
+    }
+
+    // Global Error Boundary Script: Catches unhandled JS exceptions & Promise rejections,
+    // logs them to the Bridge Event Stream with a 'level-error' log-item, and unfreezes UI state.
+    function handleGlobalBoundaryError(errorMessage, sourceInfo) {
+      try {
+        isBiometricScanning = false;
+        resetAllBtnLoadingStates();
+        const formattedMsg = sourceInfo
+          ? `[Global Error Boundary] ${errorMessage} (${sourceInfo})`
+          : `[Global Error Boundary] ${errorMessage}`;
+        log(formattedMsg, 'ERROR');
+      } catch (fallbackErr) {
+        const consoleBox = document.getElementById('consoleLogs');
+        if (consoleBox) {
+          const item = document.createElement('div');
+          item.className = 'log-item level-error';
+          item.innerHTML = `<span class="log-badge badge-error">✕ ERROR</span><span class="log-time">${new Date().toLocaleTimeString()}</span><span class="log-content">${String(errorMessage)}</span>`;
+          consoleBox.prepend(item);
+        }
+      }
+    }
+
+    window.addEventListener('error', function(event) {
+      const msg = (event && event.error && event.error.message) || (event && event.message) || 'Unhandled JavaScript Exception';
+      const src = event && event.filename ? `${event.filename.split('/').pop()}:${event.lineno || 0}` : '';
+      handleGlobalBoundaryError(msg, src);
+      if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event && event.reason;
+      const msg = (reason && reason.message) ? reason.message : String(reason || 'Unhandled Promise Rejection');
+      handleGlobalBoundaryError(`Unhandled Rejection: ${msg}`, 'Promise');
+      if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+      }
+    });
 
     // Initialize Mock / Native Capacitor Bridge
     window.Capacitor = window.Capacitor || {
@@ -1006,6 +1151,41 @@ git push origin main
       }
     };
     window.Capacitor.Plugins.NativeBiometric = window.Capacitor.Plugins.BiometricAuth;
+
+    // Capacitor Preferences Plugin object definition
+    window.Capacitor.Plugins.Preferences = {
+      set: async function(options) {
+        return await callCapacitorPlugin('Preferences', 'set', options || {});
+      },
+      get: async function(options) {
+        return await callCapacitorPlugin('Preferences', 'get', options || {});
+      },
+      remove: async function(options) {
+        return await callCapacitorPlugin('Preferences', 'remove', options || {});
+      },
+      clear: async function() {
+        return await callCapacitorPlugin('Preferences', 'clear', {});
+      },
+      keys: async function() {
+        return await callCapacitorPlugin('Preferences', 'keys', {});
+      }
+    };
+    window.Capacitor.Plugins.Storage = window.Capacitor.Plugins.Preferences;
+
+    // Apply preferred color theme ('dark_amoled' vs 'default') to document.body
+    function applyBodyTheme(themeName) {
+      const validTheme = (themeName === 'dark_amoled') ? 'dark_amoled' : 'default';
+      document.body.classList.remove('dark_amoled', 'default');
+      document.body.classList.add(validTheme);
+      document.body.setAttribute('data-theme', validTheme);
+
+      const storageKeyEl = document.getElementById('storageKey');
+      const storageValEl = document.getElementById('storageValue');
+      if (storageKeyEl && storageKeyEl.value === 'app_theme_mode' && storageValEl) {
+        storageValEl.value = validTheme;
+      }
+      return validTheme;
+    }
 
     // Real-Time Network UI updater
     function updateNetworkUI(status) {
@@ -1181,26 +1361,112 @@ git push origin main
     let callbackCounter = 0;
     const pendingCallbacks = {};
 
-    function callCapacitorPlugin(plugin, method, data = {}) {
-      return new Promise((resolve, reject) => {
-        const callbackId = 'cb_' + (++callbackCounter);
-        pendingCallbacks[callbackId] = { resolve, reject };
+    function resolveTargetButtonForPluginCall(plugin, method) {
+      if (window.event && window.event.target && typeof window.event.target.closest === 'function') {
+        const eventBtn = window.event.target.closest('.btn');
+        if (eventBtn) return eventBtn;
+      }
+      if (lastClickedBtn && (Date.now() - lastClickedBtnTime < 600)) {
+        return lastClickedBtn;
+      }
+      if (document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('btn')) {
+        return document.activeElement;
+      }
+      // Fallback lookup by plugin/method
+      const selectorMap = {
+        'Network.getStatus': 'button.btn[onclick*="checkNetworkStatus"]',
+        'BiometricAuth.authenticate': 'button.btn[onclick*="triggerBiometricScanPrompt"]',
+        'BiometricAuth.checkBiometry': 'button.btn[onclick*="checkBiometryHardware"]',
+        'Camera.getPhoto': 'button.btn[onclick*="capturePhoto"]',
+        'Geolocation.getCurrentPosition': 'button.btn[onclick*="fetchLocation"]',
+        'Preferences.set': 'button.btn[onclick*="saveStorageItem"]',
+        'Preferences.get': 'button.btn[onclick*="getStorageItem"]',
+        'Preferences.clear': 'button.btn[onclick*="clearStorageItems"]'
+      };
+      const sel = selectorMap[`${plugin}.${method}`];
+      return sel ? document.querySelector(sel) : null;
+    }
 
-        if (window.AndroidBridge && window.AndroidBridge.handleAction) {
-          const resultJson = window.AndroidBridge.handleAction(plugin, method, JSON.stringify(data), callbackId);
-          if (resultJson) {
-            try {
-              const res = JSON.parse(resultJson);
-              resolve(res);
-            } catch (e) {
-              resolve(resultJson);
+    function callCapacitorPlugin(plugin, method, data = {}) {
+      const targetBtn = resolveTargetButtonForPluginCall(plugin, method);
+      if (targetBtn) {
+        setBtnLoadingState(targetBtn, true);
+      }
+
+      const bridgePromise = new Promise((resolve, reject) => {
+        const callbackId = 'cb_' + (++callbackCounter);
+        let isSettled = false;
+
+        const safeResolve = (val) => {
+          if (isSettled) return;
+          isSettled = true;
+          delete pendingCallbacks[callbackId];
+          resolve(val);
+        };
+
+        const safeReject = (err) => {
+          if (isSettled) return;
+          isSettled = true;
+          delete pendingCallbacks[callbackId];
+          const errorObj = err instanceof Error ? err : new Error(String(err || 'Bridge call failed'));
+          log(`Plugin error in ${plugin}.${method}: ${errorObj.message}`, 'ERROR');
+          reject(errorObj);
+        };
+
+        pendingCallbacks[callbackId] = { resolve: safeResolve, reject: safeReject };
+
+        try {
+          if (window.AndroidBridge && window.AndroidBridge.handleAction) {
+            const resultJson = window.AndroidBridge.handleAction(plugin, method, JSON.stringify(data || {}), callbackId);
+            if (resultJson !== null && resultJson !== undefined) {
+              // Defer resolution slightly so awaited callers observe the loading-spinner and prevent rapid double-clicks
+              setTimeout(() => {
+                try {
+                  const res = JSON.parse(resultJson);
+                  safeResolve(res);
+                } catch (e) {
+                  safeResolve(resultJson);
+                }
+              }, 45);
             }
+          } else {
+            // Web fallback simulation
+            setTimeout(() => {
+              if (plugin === 'Preferences' && method === 'get') {
+                const k = data && data.key;
+                let stored = null;
+                try { stored = localStorage.getItem('cap_pref_' + k); } catch (_) {}
+                safeResolve({ value: stored });
+              } else if (plugin === 'Preferences' && method === 'set') {
+                try {
+                  if (data && data.key) localStorage.setItem('cap_pref_' + data.key, String(data.value ?? ''));
+                } catch (_) {}
+                safeResolve({ success: true });
+              } else if (plugin === 'BiometricAuth' && method === 'getSecureAppAccess') {
+                let enabled = false;
+                try { enabled = localStorage.getItem('cap_secure_access') === 'true'; } catch (_) {}
+                safeResolve({ enabled: enabled });
+              } else if (plugin === 'BiometricAuth' && method === 'setSecureAppAccess') {
+                try { localStorage.setItem('cap_secure_access', String(!!(data && data.enabled))); } catch (_) {}
+                safeResolve({ success: true, enabled: !!(data && data.enabled) });
+              } else if (plugin === 'BiometricAuth' && method === 'authenticate') {
+                safeResolve({ success: true, verified: true });
+              } else if (plugin === 'BiometricAuth' && method === 'checkBiometry') {
+                safeResolve({ isAvailable: true, status: 'Biometric hardware ready & enrolled' });
+              } else {
+                safeResolve({ simulated: true, status: 'ok', connected: true, connectionType: 'wifi' });
+              }
+            }, 100);
           }
-        } else {
-          // Web fallback simulation
-          setTimeout(() => {
-            resolve({ simulated: true, status: 'ok' });
-          }, 100);
+        } catch (internalErr) {
+          handleGlobalBoundaryError(`Bridge invocation failed (${plugin}.${method}): ${internalErr.message || internalErr}`, 'callCapacitorPlugin');
+          safeReject(internalErr);
+        }
+      });
+
+      return bridgePromise.finally(() => {
+        if (targetBtn) {
+          setBtnLoadingState(targetBtn, false);
         }
       });
     }
@@ -1351,10 +1617,26 @@ git push origin main
         if (lockIcon) lockIcon.innerText = isEnabled ? '🔒' : '🔓';
         if (desc) desc.innerText = isEnabled ? 'Active • Protected with native Fingerprint / Face ID' : 'Disabled • Tap toggle to enable biometric protection';
 
+        // Load user's preferred color theme ('dark_amoled' vs 'default') via native Preferences plugin
+        const themePref = await window.Capacitor.Plugins.Preferences.get({ key: 'app_theme_mode' });
+        let preferredTheme = (themePref && (themePref.value === 'dark_amoled' || themePref.value === 'default'))
+          ? themePref.value
+          : (isEnabled ? 'dark_amoled' : 'default');
+
+        applyBodyTheme(preferredTheme);
+
+        if (!themePref || (themePref.value !== 'dark_amoled' && themePref.value !== 'default')) {
+          await window.Capacitor.Plugins.Preferences.set({
+            key: 'app_theme_mode',
+            value: preferredTheme
+          });
+        }
+        log(`Preferences theme loaded & applied to body: "${preferredTheme}"`, 'SUCCESS');
+
         // Check hardware status as well
         await checkBiometryHardware();
       } catch (err) {
-        console.error('Failed to load biometric state:', err);
+        handleGlobalBoundaryError('Failed to load biometric & theme state: ' + (err.message || err), 'loadBiometricState');
       }
     }
 
@@ -1383,20 +1665,28 @@ git push origin main
           cancelTitle: 'Cancel'
         });
 
-        if (result && result.success) {
-          // Save persistent state
+        if (result && (result.success || result.verified)) {
+          // Save persistent biometric access state
           await window.Capacitor.Plugins.BiometricAuth.setSecureAppAccess({ enabled: targetState });
+
+          // Save user's preferred color theme ('dark_amoled' vs 'default') via native Preferences plugin
+          const preferredTheme = targetState ? 'dark_amoled' : 'default';
+          await window.Capacitor.Plugins.Preferences.set({
+            key: 'app_theme_mode',
+            value: preferredTheme
+          });
+          applyBodyTheme(preferredTheme);
           
           if (toggle) toggle.checked = targetState;
           if (lockIcon) lockIcon.innerText = targetState ? '🔒' : '🔓';
           if (desc) desc.innerText = targetState 
-            ? 'Active • Protected with native Fingerprint / Face ID' 
-            : 'Disabled • Tap toggle to enable biometric protection';
-          if (detail) detail.innerText = `Secure Access ${targetState ? 'Enabled' : 'Disabled'} via Biometric Scan`;
+            ? `Active • Protected with Fingerprint / Face ID (${preferredTheme})` 
+            : `Disabled • Tap toggle to enable biometric protection (${preferredTheme})`;
+          if (detail) detail.innerText = `Secure Access ${targetState ? 'Enabled' : 'Disabled'} • Theme: ${preferredTheme}`;
 
           triggerHaptic('heavy');
-          log(`Biometric identity verified! Secure App Access is now ${targetState ? 'ENABLED' : 'DISABLED'}.`, 'SUCCESS');
-          showToastMessage(`Secure Access ${targetState ? 'Enabled' : 'Disabled'}`);
+          log(`Biometric identity verified! Secure App Access is now ${targetState ? 'ENABLED' : 'DISABLED'} and theme "${preferredTheme}" saved to Preferences.`, 'SUCCESS');
+          showToastMessage(`Secure Access ${targetState ? 'Enabled' : 'Disabled'} (${preferredTheme})`);
         } else {
           throw new Error('Biometric verification not confirmed');
         }
@@ -1454,6 +1744,9 @@ git push origin main
         return;
       }
       await callCapacitorPlugin('Preferences', 'set', { key: key, value: val });
+      if (key === 'app_theme_mode' && (val === 'dark_amoled' || val === 'default')) {
+        applyBodyTheme(val);
+      }
       log(`Storage SET [${key}] = "${val}" successfully saved`, 'SUCCESS');
       showToastMessage(`Saved "${key}" to native storage`);
     }

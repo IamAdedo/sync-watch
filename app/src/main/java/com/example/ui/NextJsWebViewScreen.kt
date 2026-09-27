@@ -479,7 +479,51 @@ fun NextJsWebViewScreen(
                                             };
                                             window.Capacitor.Plugins.NativeBiometric = window.Capacitor.Plugins.BiometricAuth;
                                         }
-                                        console.log('[NativeBridge] Next.js Capacitor Bridge, Network & BiometricAuth active in Android WebView');
+                                        if (!window.Capacitor.Plugins.Preferences) {
+                                            window.Capacitor.Plugins.Preferences = {
+                                                set: function(options) {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Preferences', 'set', JSON.stringify(options || {}), '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ success: true });
+                                                        }
+                                                    });
+                                                },
+                                                get: function(options) {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Preferences', 'get', JSON.stringify(options || {}), '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ value: null });
+                                                        }
+                                                    });
+                                                },
+                                                remove: function(options) {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Preferences', 'remove', JSON.stringify(options || {}), '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ success: true });
+                                                        }
+                                                    });
+                                                },
+                                                clear: function() {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Preferences', 'clear', '{}', '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ success: true });
+                                                        }
+                                                    });
+                                                }
+                                            };
+                                        }
+                                        console.log('[NativeBridge] Next.js Capacitor Bridge, Network, Preferences & BiometricAuth active in Android WebView');
                                     })();
                                 """.trimIndent()
                                 view?.evaluateJavascript(injectShim, null)

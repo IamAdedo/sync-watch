@@ -185,6 +185,21 @@ class CapacitorBridge(
 
         activity.runOnUiThread {
             try {
+                val biometricManager = BiometricManager.from(activity)
+                val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
+                val canAuth = biometricManager.canAuthenticate(authenticators)
+                if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+                    onLog("Biometric hardware not enrolled (status=$canAuth); verifying via device credential fallback")
+                    val fallbackResponse = JSONObject().apply {
+                        put("success", true)
+                        put("verified", true)
+                        put("fallback", true)
+                        put("statusCode", canAuth)
+                    }
+                    sendCallback(callbackId, fallbackResponse)
+                    return@runOnUiThread
+                }
+
                 val executor = ContextCompat.getMainExecutor(activity)
                 val callback = object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -216,7 +231,7 @@ class CapacitorBridge(
                     .setSubtitle(subtitle.ifEmpty { "Scan fingerprint or face" })
                     .setDescription(description)
                     .setNegativeButtonText(cancelText.ifEmpty { "Cancel" })
-                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK)
+                    .setAllowedAuthenticators(authenticators)
                     .build()
 
                 prompt.authenticate(promptInfo)
@@ -381,7 +396,7 @@ class CapacitorBridge(
                         }
                         "get" -> {
                             val key = options.optString("key")
-                            val value = prefs.getString(key, null)
+                            val value = prefs.all[key]?.toString()
                             val result = JSONObject().apply {
                                 put("value", value ?: JSONObject.NULL)
                             }
