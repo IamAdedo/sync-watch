@@ -535,7 +535,31 @@ fun NextJsWebViewScreen(
                                                 }
                                             };
                                         }
-                                        console.log('[NativeBridge] Next.js Capacitor Bridge, Network, Preferences & BiometricAuth active in Android WebView');
+                                        if (!window.Capacitor.Plugins.Device) {
+                                            window.Capacitor.Plugins.Device = {
+                                                getInfo: function() {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Device', 'getInfo', '{}', '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ model: 'Android Device', platform: 'android', osVersion: '14' });
+                                                        }
+                                                    });
+                                                },
+                                                getBatteryInfo: function() {
+                                                    return new Promise(function(resolve) {
+                                                        if (window.AndroidBridge) {
+                                                            var res = window.AndroidBridge.handleAction('Device', 'getBatteryInfo', '{}', '');
+                                                            try { resolve(JSON.parse(res)); } catch(e) { resolve(res); }
+                                                        } else {
+                                                            resolve({ batteryLevel: 0.85, percentage: 85, isCharging: true });
+                                                        }
+                                                    });
+                                                }
+                                            };
+                                        }
+                                        console.log('[NativeBridge] Next.js Capacitor Bridge, Network, Device, Preferences & BiometricAuth active in Android WebView');
                                     })();
                                 """.trimIndent()
                                 view?.evaluateJavascript(injectShim, null)
