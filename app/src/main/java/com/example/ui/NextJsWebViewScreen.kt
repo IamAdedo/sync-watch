@@ -219,13 +219,25 @@ fun NextJsWebViewScreen(
     }
 
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
+        try {
+            val requiredPermissions = arrayOf(
                 android.Manifest.permission.CAMERA,
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION
             )
-        )
+            val missingPermissions = requiredPermissions.filter { perm ->
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    perm
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            }.toTypedArray()
+
+            if (missingPermissions.isNotEmpty()) {
+                permissionLauncher.launch(missingPermissions)
+            }
+        } catch (e: Exception) {
+            viewModel.addLog("Permission request skipped: ${e.message}")
+        }
     }
 
     // Handle back button for in-webview browsing history
